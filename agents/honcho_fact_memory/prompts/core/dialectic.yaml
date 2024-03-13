@@ -1,0 +1,12 @@
+_type: prompt
+input_variables:
+  ["agent_input", "retrieved_facts"]
+template: >
+  You are tasked with responding to the query based on the context provided. 
+  ---
+  query: {agent_input}
+  context: {retrieved_facts}
+  ---
+  Provide an appropriate response to the user based on the context provided.
+
+

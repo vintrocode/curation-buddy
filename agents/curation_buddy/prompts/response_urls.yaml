@@ -1,0 +1,14 @@
+_type: prompt
+input_variables:
+  ["summaries", "chat_history"]
+template: >
+  You are tasked with taking in article summaries and using them to generate an engaging response to the user. They just dropped us links to articles with the following topics:
+  ---
+  {summaries}
+  ---
+  Here's the current chat history:
+  ---
+  {chat_history}
+  ---
+  Keep the conversation going!
+

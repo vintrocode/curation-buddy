@@ -1,0 +1,10 @@
+_type: prompt
+input_variables:
+  ["webpage_content"]
+template: >
+  You are tasked with extracting the topic of the following webpage content:
+  ---
+  {webpage_content}
+  ---
+  What's this content about? Respond with one sentence only.
+

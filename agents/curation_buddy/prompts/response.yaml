@@ -1,3 +1,10 @@
 _type: prompt
 input_variables:
+  ["input", "answers", "chat_history"]
 template: >
+  Generate a response given the following input, context, and chat history
+
+  Input: {input}
+  Thought: {thought}
+  Context: {answers}
+  Chat History: {chat_history}

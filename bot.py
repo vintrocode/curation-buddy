@@ -47,19 +47,16 @@ async def on_message(message):
         return
 
     user_id = f"discord_{str(message.author.id)}"
-    user = honcho.get_or_create(user_id)
+    user = honcho.get_or_create_user(user_id)
     location_id = str(message.channel.id)
 
-    sessions = list(user.get_sessions_generator(location_id))
+    sessions = list(user.get_sessions_generator(location_id, is_active=True, reverse=True))
     try:
-        collection = user.get_collection(user_id=user_id, name="discord")
+        collection = user.get_collection(name="discord")
     except Exception:
-        collection = user.create_collection(user_id=user_id, name="discord")
+        collection = user.create_collection(name="discord")
 
-    if len(sessions) > 0:
-        session = sessions[0]
-    else:
-        session = user.create_session(location_id)
+    session = sessions[0] if len(sessions) > 0 else user.create_session(location_id)
 
     history = list(session.get_messages_generator())[:5]
     chat_history = langchain_message_converter(history)
@@ -70,8 +67,10 @@ async def on_message(message):
     async with message.channel.typing():
         response = await CurationBuddyChain.chat(
             chat_history=chat_history,
-            input=user_message,
-            session=session
+            input=inp,
+            message=user_message,
+            session=session,
+            collection=collection
         )
         await message.channel.send(response)
 
@@ -83,7 +82,7 @@ async def restart(ctx):
     user_id = f"discord_{str(ctx.author.id)}"
     user = honcho.get_or_create_user(user_id)
     location_id = str(ctx.channel_id)
-    sessions = list(user.get_sessions_generator(location_id))
+    sessions = list(user.get_sessions_generator(location_id, reverse=True))
     sessions[0].close() if len(sessions) > 0 else None
 
     msg = (
