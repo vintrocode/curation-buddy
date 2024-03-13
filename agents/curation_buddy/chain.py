@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, load_prompt
 from langchain_core.output_parsers import NumberedListOutputParser
-from langchain_core.messages import HumanMessage
 from langchain_community.utilities import ApifyWrapper
 from langchain_community.document_loaders.base import Document
 from honcho import Collection, Session, Message
 from ..honcho_fact_memory.chain import SimpleMemoryChain
+from utils import langchain_message_unpacker
 
 load_dotenv()
 
@@ -74,12 +74,12 @@ class CurationBuddyChain:
         chain = response_urls_prompt | cls.gpt_35
         response = await chain.ainvoke({
             "summaries": summaries,
-            "chat_history": chat_history
+            "chat_history": langchain_message_unpacker(chat_history)
         })
         return response.content
 
     @classmethod
-    async def generate_thought(cls, input: str, chat_history: List[str], session: Session, message: Message, max_retries: int = 3) -> str:
+    async def generate_thought(cls, input: str, chat_history: List[str], max_retries: int = 3) -> str:
         """Generate a thought about the user's input along with a list of questions that'd help it better serve the user"""
         thought_prompt = ChatPromptTemplate.from_messages([
             cls.system_thought
@@ -90,7 +90,7 @@ class CurationBuddyChain:
             try:
                 response = await chain.ainvoke({
                     "input": input,
-                    "chat_history": chat_history
+                    "chat_history": langchain_message_unpacker(chat_history)
                 })
                 questions = cls.output_parser.parse(response.content)
                 break  # Exit loop if successful
@@ -99,7 +99,6 @@ class CurationBuddyChain:
                 retries += 1
                 if retries == max_retries:
                     print("Max retries reached. Moving on without parsing questions.")
-        session.create_metamessage(message, metamessage_type="thought", content=response.content)
         return response.content, questions
 
     @classmethod
@@ -122,7 +121,7 @@ class CurationBuddyChain:
             "input": input,
             "thought": thought,
             "answers": answers,
-            "chat_history": chat_history
+            "chat_history": langchain_message_unpacker(chat_history)
         })
         return response.content
 
@@ -153,9 +152,10 @@ class CurationBuddyChain:
                 return response
 
         # no links, let's continue the convo
-        thought, questions = await cls.generate_thought(input, chat_history, session, message)
+        thought, questions = await cls.generate_thought(input, chat_history)
+        session.create_metamessage(message, metamessage_type="thought", content=thought)  # write intermediate thought to honcho
         answers = await cls.ask_questions(collection, questions)
-        response = await cls.generate_response(input, thought, answers, chat_history, session)
+        response = await cls.generate_response(input, thought, answers, chat_history)
         return response
     
 

@@ -8,3 +8,6 @@ template: >
   Thought: {thought}
   Context: {answers}
   Chat History: {chat_history}
+
+  Keep your responses concise and specific, always end each message with ONLY ONE topically relevant comment, question, or point that drives the conversation forward
+

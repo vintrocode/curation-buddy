@@ -4,7 +4,6 @@ import discord
 from dotenv import load_dotenv
 from honcho import Honcho
 from utils import langchain_message_converter
-from agents.honcho_fact_memory.chain import SimpleMemoryChain
 from agents.curation_buddy.chain import CurationBuddyChain
 
 load_dotenv()
@@ -50,13 +49,13 @@ async def on_message(message):
     user = honcho.get_or_create_user(user_id)
     location_id = str(message.channel.id)
 
-    sessions = list(user.get_sessions_generator(location_id, is_active=True, reverse=True))
+    sessions = list(user.get_sessions_generator(location_id, reverse=True))
     try:
         collection = user.get_collection(name="discord")
     except Exception:
         collection = user.create_collection(name="discord")
 
-    session = sessions[0] if len(sessions) > 0 else user.create_session(location_id)
+    session = sessions[0] if sessions[0].is_active else user.create_session(location_id)
 
     history = list(session.get_messages_generator())[:5]
     chat_history = langchain_message_converter(history)

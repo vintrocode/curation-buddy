@@ -62,9 +62,11 @@ class SimpleMemoryChain:
         })
         new_facts = cls.output_parser.parse(response.content)
         for fact in new_facts:
-            collection.create_document(content=fact)
+            doc = collection.create_document(content=fact)
+            print(f"Returned Document: {doc}")
         for fact in new_facts:
             session.create_metamessage(message=user_message, metamessage_type="fact", content=fact)
+            print(f"Created fact: {fact}")
 
         return
     
@@ -88,5 +90,4 @@ class SimpleMemoryChain:
         facts = await cls.derive_facts(chat_history=[], input=content)
         # Example: Check for duplicate facts
         await cls.check_dups(user_message=Message(content=content), session=session, collection=collection, facts=facts)
-        # Add more logic as needed    
     
