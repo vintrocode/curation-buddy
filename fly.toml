@@ -1,0 +1,16 @@
+# fly.toml app configuration file generated for curation-buddy on 2024-03-14T14:54:04-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'curation-buddy'
+primary_region = 'mia'
+
+
+[processes]
+  app = "python -u bot.py"
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
