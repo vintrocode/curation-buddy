@@ -13,7 +13,7 @@ intents.messages = True
 intents.message_content = True
 intents.members = True
 
-app_name = 'vince-curation-buddy'
+app_name = 'prod-curation-buddy'
 
 # honcho = Honcho(app_name=app_name, base_url="http://localhost:8000") # uncomment to use local
 honcho = Honcho(app_name=app_name)  # uses demo server at https://demo.honcho.dev
@@ -30,9 +30,10 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
     await member.send(
-        f"*Hello {member.name}, welcome to the server! This is a demo bot built with Honcho,* "
-        "*implementing a naive version of the memory feature similar to what ChatGPT recently released.* "
+        f"*Hello {member.name}, welcome to the server! This is Curation Buddy - a demo bot built with Honcho,* "
+        "*meant to engage you with links you share.* "
         "*To get started, just type a message in this channel and the bot will respond.* "
+        "*You can also drop links within those messages, and the bot will read them and respond.*"
         "*Over time, it will remember facts about you and use them to make the conversation more personal.* "
         "*You can use the /restart command to restart the conversation at any time.* "
         "*If you have any questions or feedback, feel free to ask in the #honcho channel.* "
@@ -50,12 +51,10 @@ async def on_message(message):
     location_id = str(message.channel.id)
 
     sessions = list(user.get_sessions_generator(location_id, reverse=True))
-    try:
-        collection = user.get_collection(name="discord")
-    except Exception:
-        collection = user.create_collection(name="discord")
-
-    session = sessions[0] if sessions[0].is_active else user.create_session(location_id)
+    if sessions:
+        session = sessions[0] if sessions[0].is_active else user.create_session(location_id)
+    else:
+        session = user.create_session(location_id)
 
     history = list(session.get_messages_generator())[:5]
     chat_history = langchain_message_converter(history)
@@ -68,8 +67,7 @@ async def on_message(message):
             chat_history=chat_history,
             input=inp,
             message=user_message,
-            session=session,
-            collection=collection
+            session=session
         )
         await message.channel.send(response)
 

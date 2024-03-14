@@ -5,10 +5,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, load_prompt
 from langchain_core.output_parsers import NumberedListOutputParser
 from langchain_community.utilities import ApifyWrapper
-from langchain_community.document_loaders.base import Document
-from honcho import Collection, Session, Message
-from ..honcho_fact_memory.chain import SimpleMemoryChain
-from ...utils import langchain_message_unpacker
+from langchain_core.document_loaders.base import Document
+from honcho import Session, Message
+from utils import langchain_message_unpacker
 
 load_dotenv()
 
@@ -102,11 +101,11 @@ class CurationBuddyChain:
         return response.content, questions
 
     @classmethod
-    async def ask_questions(cls, collection: Collection, questions: List[str]) -> List[str]:
+    async def ask_questions(cls, session: Session, questions: List[str]) -> List[str]:
         """Loop over the questions and ask honcho about them"""
         answers = []
         for question in questions:
-            answer = await SimpleMemoryChain.dialectic_endpoint(question, collection)
+            answer = session.chat(question)
             answers.append(answer)
         return answers
 
@@ -134,7 +133,6 @@ class CurationBuddyChain:
         chat_history: List[str], 
         message: Message, 
         session: Session, 
-        collection: Collection
     ) -> str:
         """Chat with the user"""
 
@@ -154,7 +152,7 @@ class CurationBuddyChain:
         # no links, let's continue the convo
         thought, questions = await cls.generate_thought(input, chat_history)
         session.create_metamessage(message, metamessage_type="thought", content=thought)  # write intermediate thought to honcho
-        answers = await cls.ask_questions(collection, questions)
+        answers = await cls.ask_questions(session, questions)
         response = await cls.generate_response(input, thought, answers, chat_history)
         return response
     
