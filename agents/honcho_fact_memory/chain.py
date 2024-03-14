@@ -1,11 +1,11 @@
 import os
 from typing import List
 from dotenv import load_dotenv
+from supabase import Client
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, load_prompt
 from langchain_core.output_parsers import NumberedListOutputParser
 from langchain_core.messages import HumanMessage
-from honcho import Collection, Session, Message
 
 load_dotenv()
 
@@ -46,13 +46,14 @@ class SimpleMemoryChain:
         return facts
     
     @classmethod
-    async def check_dups(cls, user_message: Message, session: Session, collection: Collection, facts: List):
+    async def check_dups(cls, facts: List):
         """Check that we're not storing duplicate facts"""
 
         check_duplication = ChatPromptTemplate.from_messages([
             cls.system_check_dups
         ])
         query = " ".join(facts)
+        # TODO: query the collection directly
         result = collection.query(query=query, top_k=10) 
         existing_facts = [document.content for document in result]
         chain = check_duplication | cls.llm
@@ -62,17 +63,20 @@ class SimpleMemoryChain:
         })
         new_facts = cls.output_parser.parse(response.content)
         for fact in new_facts:
+            # TODO: Create a document in the collection
             doc = collection.create_document(content=fact)
             print(f"Returned Document: {doc}")
         for fact in new_facts:
+            # TODO: create a metamessage for each fact
             session.create_metamessage(message=user_message, metamessage_type="fact", content=fact)
             print(f"Created fact: {fact}")
 
         return
     
     @classmethod
-    async def dialectic_endpoint(cls, agent_input: str, collection: Collection) -> str:
+    async def dialectic_endpoint(cls, agent_input: str) -> str:
         """Take in agent input, retrieve from the collection, respond"""
+        # TODO: query the collection directly
         result = collection.query(query=agent_input, top_k=1)
         dialectic_prompt = ChatPromptTemplate.from_messages([
             cls.system_dialectic
@@ -85,9 +89,10 @@ class SimpleMemoryChain:
         return response.content
 
     @classmethod
-    async def process_user_message(cls, content: str, session: Session, collection: Collection):
+    async def process_user_message(cls, content: str, supabase: Client, session_id: str, user_id: str, message_id: str):
         # Example: Derive facts from the user input
         facts = await cls.derive_facts(chat_history=[], input=content)
         # Example: Check for duplicate facts
-        await cls.check_dups(user_message=Message(content=content), session=session, collection=collection, facts=facts)
+        # TODO: fix what gets passed in here
+        await cls.check_dups(user_message=content, facts=facts)
     

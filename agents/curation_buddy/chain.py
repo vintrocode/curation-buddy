@@ -8,7 +8,7 @@ from langchain_community.utilities import ApifyWrapper
 from langchain_community.document_loaders.base import Document
 from honcho import Collection, Session, Message
 from ..honcho_fact_memory.chain import SimpleMemoryChain
-from utils import langchain_message_unpacker
+from ...utils import langchain_message_unpacker
 
 load_dotenv()
 
