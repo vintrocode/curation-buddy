@@ -13,7 +13,7 @@ intents.messages = True
 intents.message_content = True
 intents.members = True
 
-app_name = 'prod-curation-buddy'
+app_name = str(uuid1())
 
 # honcho = Honcho(app_name=app_name, base_url="http://localhost:8000") # uncomment to use local
 honcho = Honcho(app_name=app_name)  # uses demo server at https://demo.honcho.dev
