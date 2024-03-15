@@ -13,8 +13,6 @@ then copy the `.env.template` into a `.env` file and fill in the values:
 ```
 BOT_TOKEN=
 OPENAI_API_KEY=
-SUPABASE_ID=
-SUPABASE_KEY=
 APIFY_API_TOKEN=
 LANGCHAIN_PROJECT=
 LANGCHAIN_TRACING_V2=
